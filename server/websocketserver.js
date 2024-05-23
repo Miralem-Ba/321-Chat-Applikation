@@ -111,7 +111,7 @@ const loadMessages = async() => {
       const combinateEntry = { name: firstArray[i].name, message: secondArray[i].message, timestamp: secondArray[i].timestamp };
       combinedArray.push(combinateEntry);
     }
-    
+
     return combinedArray;
   };
 
@@ -119,16 +119,46 @@ const loadMessages = async() => {
   return(fullMesageDatas2);
 }
 
-const onDisconnect = (ws) => {
-  const index = clients.findIndex((client) => client.ws === ws);
-  clients.splice(index, 1);
-  const usersMessage = {
-    type: "users",
-    users: clients.map((client) => client.user),
-  };
-  clients.forEach((client) => {
-    client.ws.send(JSON.stringify(usersMessage));
-  });
-};
+// Funktion zum Verarbeiten und Speichern empfangener Chat-Nachrichten in der Datenbank
+const receiveChat = async (messageInput, usernameInput, timeStampInput) => {
+  const message = messageInput
+  const username = usernameInput
+  const timeStamp = timeStampInput
+  const userIdResult = await executeSQL(`SELECT id FROM users WHERE name = '${username}'`);
+  
+  if (userIdResult && userIdResult.length > 0) {
+    userId = userIdResult[0].id;
+  } else {
+    userId = 17; // Standardbenutzer-ID, falls Benutzer nicht gefunden wird
+  }
+
+  // Bedingte Nachrichtenverarbeitung und Speichern in der Datenbank
+  if (message === "smile") {
+    const newMessage = "(＾◡＾)"
+    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${newMessage}", "${timeStamp}")`;
+    await executeSQL(query);
+  }
+
+  else if (message === "wizard") {
+    const newMessage = "(∩^o^)⊃━☆"
+    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${newMessage}", "${timeStamp}")`;
+    await executeSQL(query);
+  }
+
+  else if (message === "") {
+    const newMessage = "--This user was too stupid for a message--\n--LG KIM--"
+    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${newMessage}", "${timeStamp}")`;
+    await executeSQL(query);
+    const query2 = `INSERT INTO messages (user_id, message, timestamp) VALUES (21, "Hahahahahahahahahaha", "${timeStamp}")`;
+    await executeSQL(query2);
+  }
+
+  else {
+    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${message}", "${timeStamp}")`;
+    await executeSQL(query);
+  }
+}
+
+
 
 module.exports = { initializeWebsocketServer };
