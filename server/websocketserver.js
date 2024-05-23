@@ -125,7 +125,7 @@ const receiveChat = async (messageInput, usernameInput, timeStampInput) => {
   const username = usernameInput
   const timeStamp = timeStampInput
   const userIdResult = await executeSQL(`SELECT id FROM users WHERE name = '${username}'`);
-  
+
   if (userIdResult && userIdResult.length > 0) {
     userId = userIdResult[0].id;
   } else {
@@ -159,6 +159,12 @@ const receiveChat = async (messageInput, usernameInput, timeStampInput) => {
   }
 }
 
+// Funktion zum Verarbeiten und Speichern empfangener Benutzerdaten in der Datenbank
+const receiveUser = async (usernameInput) => {
+  const username = usernameInput
+  const query = `INSERT INTO users (name) VALUES ("${username}")`;
+  await executeSQL(query);
+}
 
-
+// Exportieren der Funktion zur Initialisierung des WebSocket-Servers
 module.exports = { initializeWebsocketServer };
