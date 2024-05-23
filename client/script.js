@@ -71,6 +71,31 @@ socket.addEventListener("message", (event) => {
     chatBox.scrollTop = chatBox.scrollHeight;
 })
 
+// Funktion zum Auswählen eines Benutzers und Senden der Benutzerdaten über WebSocket
+const selectUser = async () => {
+
+  // Zugriff auf das Eingabefeld für den Benutzernamen im DOM
+  const userInput = document.getElementById('user-input');
+
+  // Abrufen des Benutzernamens aus dem Eingabefeld
+  const username = userInput.value;
+
+  // Erstellen eines Objekts mit den Benutzerdaten
+  const userData = {
+      username: username
+  };
+
+  // Erstellen einer Nachricht im JSON-Format, die die Benutzerdaten enthält
+  const wsUser = JSON.stringify([
+      {
+        type: "sendUserData", // Der Typ der Nachricht, der angibt, dass Benutzerdaten gesendet werden
+        message: JSON.stringify(userData) // Die Benutzerdaten selbst, als JSON-String
+      }
+    ])
+
+    // Senden der Nachricht über die WebSocket-Verbindung
+    socket.send(wsUser) 
+};
 
 
 // Event-Listener für das Laden des Dokuments
