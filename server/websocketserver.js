@@ -2,17 +2,22 @@
 const WebSocket = require("ws");
 const { executeSQL } = require("./database");
 
-const clients = [];
-
+// Initialisierung des WebSocket-Servers
 const initializeWebsocketServer = (server) => {
   const websocketServer = new WebSocket.Server({ server });
   websocketServer.on("connection", onConnection);
 };
 
+// Array, um alle WebSocket-Verbindungen zu speichern
+let websockets = [];
 
+// Funktion, die aufgerufen wird, wenn eine neue WebSocket-Verbindung hergestellt wird
 const onConnection = (ws) => {
-  console.log("New websocket connection");
+  console.log("Neue WebSocket-Verbindung");
+  // Event-Listener für eingehende Nachrichten
   ws.on("message", (message) => onMessage(ws, message));
+  // Event-Listener für das Schließen der Verbindung
+  ws.on("close", () => onClose(ws))
 };
 
 
