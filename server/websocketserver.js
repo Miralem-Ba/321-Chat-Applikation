@@ -69,6 +69,26 @@ const onMessage = async (ws, message) => {
   }
 };
 
+// Funktion, die aufgerufen wird, wenn eine WebSocket-Verbindung geschlossen wird
+const onClose = async (ws) => {
+  // Entfernen der geschlossenen Verbindung aus dem Array
+  websockets = websockets.filter((entry) => entry.websocket !== ws);
+
+  // Laden der aktuellen Nachrichten aus der Datenbank
+  const messageDatas = await loadMessages();
+  const wsMessage = JSON.stringify([
+    {
+      type: "messagesData",
+      message: JSON.stringify(messageDatas),
+      users: websockets
+    },
+  ]);
+  
+  // Senden der Nachrichten und Benutzerliste an alle verbundenen Clients
+  for (let i = 0; i < websockets.length; i++) {
+    websockets[i].websocket.send(wsMessage)
+  }
+}
 
 const onDisconnect = (ws) => {
   const index = clients.findIndex((client) => client.ws === ws);
