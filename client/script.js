@@ -97,6 +97,61 @@ const selectUser = async () => {
     socket.send(wsUser) 
 };
 
+//Funktion zum Erstellen einer neuen Chat-Nachricht und Senden dieser Nachricht über WebSocket
+const newChatBox = async () => {
+
+  // Zugriff auf das Chat-Fenster und die Eingabefelder für Nachricht und Benutzername im DOM
+  const chatBox = document.getElementById('chatwindow');
+  const msgInput = document.getElementById('message-input');
+  const userInput = document.getElementById('user-input');
+
+  // Abrufen des Benutzernamens und der Nachricht aus den Eingabefeldern
+  const username = userInput.value;
+  const message = msgInput.value;
+
+  // Erstellen eines Zeitstempels für die Nachricht
+  const timeStamp = new Date().toLocaleDateString("de-CH", {
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
+
+  // Erstellen eines Objekts mit den Chat-Daten
+  const chatData = {
+      username: username,
+      message: message,
+      timeStamp: timeStamp 
+  };
+
+  // HTML-Struktur für die neue Nachricht im Chat-Fenster
+  const chatBoxElement = 
+      `<div id="chatboxUser" class="w-5/12 h-fit bg-indigo-100 rounded-lg outline">
+          <span class="text-xl font-bold">${username}</span> 
+          <div class="border-t border-gray-500 my-1"></div> 
+          <p class="">${message}</p>
+          <div class="border-t border-gray-500 my-1"></div> 
+          <span class="text-xs text-left underline-offset-1">${timeStamp}</span>
+      </div>`;
+
+  // Hinzufügen der neuen Nachricht zum Chat-Fenster
+  chatBox.innerHTML += chatBoxElement;
+
+  // Scroll das Chat-Fenster nach unten, um die neueste Nachricht anzuzeigen
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  
+  // Erstellen der WebSocket-Nachricht im JSON-Format, die die Chat-Daten enthält
+  const wsMessage = JSON.stringify([
+    {
+      type: "sendChatData", // Der Typ der Nachricht, der angibt, dass Chat-Daten gesendet werden
+      message: JSON.stringify(chatData) // Die Chat-Daten selbst, als JSON-String
+    }
+  ])
+
+  // Senden der Nachricht über die WebSocket-Verbindung
+  socket.send(wsMessage)    
+};
+
 
 // Event-Listener für das Laden des Dokuments
 document.addEventListener("DOMContentLoaded", () => {
