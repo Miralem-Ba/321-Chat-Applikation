@@ -20,34 +20,52 @@ const onConnection = (ws) => {
   ws.on("close", () => onClose(ws))
 };
 
+// Funktion, die aufgerufen wird, wenn eine Nachricht empfangen wird
+const onMessage = async (ws, message) => {
+  const getMessagEntry = JSON.parse(message);
+  if (getMessagEntry[0].type === "sendChatData") {
+    const newMessageEntry = JSON.parse(getMessagEntry[0].message);
+    const messageOutput = newMessageEntry.message;
+    const usernameOutput = newMessageEntry.username;
+    const timeStampOutput = newMessageEntry.timeStamp;
+    await receiveChat(messageOutput, usernameOutput, timeStampOutput);
+  }
+  else if (getMessagEntry[0].type === "sendUserData") {
+    const newMessageEntry = JSON.parse(getMessagEntry[0].message);
+    const usernameOutput = newMessageEntry.username;
 
-const onMessage = (ws, messageBuffer) => {
-  const messageString = messageBuffer.toString();
-  const message = JSON.parse(messageString);
-  console.log("Received message: " + messageString);
-  // The message type is checked and the appropriate action is taken
-  switch (message.type) {
-    case "user": {
-      clients.push({ ws, user: message.user });
-      const usersMessage = {
-        type: "users",
-        users: clients.map((client) => client.user),
-      };
-      clients.forEach((client) => {
-        client.ws.send(JSON.stringify(usersMessage));
-      });
-      ws.on("close", () => onDisconnect(ws));
-      break;
+    for (let i = 0; i < websockets.length; i++) {
+      if (ws === websockets[i].websocket) {
+        websockets[i].username = usernameOutput;
+      }
+      console.log(websockets[i].username)
     }
-    case "message": {
-      clients.forEach((client) => {
-        client.ws.send(messageString);
-      });
-      break;
+    await receiveUser(usernameOutput);
+  }
+
+  else if (getMessagEntry === "Hello, server!") {
+    const clientData = {
+      websocket: ws,
+      username: ""
     }
-    default: {
-      console.log("Unknown message type: " + message.type);
-    }
+
+    websockets.push(clientData);
+    console.log(websockets.length)
+  }
+  
+  // Laden der aktuellen Nachrichten aus der Datenbank
+  const messageDatas = await loadMessages();
+  const wsMessage = JSON.stringify([
+    {
+      type: "messagesData",
+      message: JSON.stringify(messageDatas),
+      users: websockets
+    },
+  ]);
+  
+  // Senden der Nachrichten und Benutzerliste an alle verbundenen Clients
+  for (let i = 0; i < websockets.length; i++) {
+    websockets[i].websocket.send(wsMessage)
   }
 };
 
