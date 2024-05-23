@@ -1,3 +1,54 @@
+/* Allgemeine Stile für die Webseite */
 body {
     font-family: 'Roboto', sans-serif;
+    background-color: #11161d;
+}
+
+/* Stile für das Chatfenster */
+#chatwindow {
+    width: 800px;
+    height: 400px;
+    max-height: 600px;
+    overflow-y: scroll;
+}
+
+/* Stile für die Benutzerliste */
+#userList {
+    color: rgb(215, 207, 207);
+    overflow-y: scroll;
+}
+
+/* Stile für einzelne Nachrichten im Chatfenster */
+#chatbox{
+    margin: 10px;
+    background-color: rgba(26, 24, 35, 0.427);
+    color: rgb(215, 207, 207);
+    padding: 8px;
+}
+
+/* Stile für Benutzer-Nachrichten im Chatfenster */
+#chatboxUser{
+    margin: 10px;
+    background-color: rgba(21, 20, 28, 0.427);
+    color: rgb(215, 207, 207);
+    padding: 8px;
+}
+
+/* Stile für das Eingabefeld für Nachrichten */
+#inputWindow {
+    width: 800px;
+}
+
+/* Stile für einzelne Benutzer in der Benutzerliste */
+.user-item {
+    margin: 10px;
+    background-color: rgba(26, 24, 35, 0.427);
+    color: rgb(215, 207, 207);
+    padding: 8px;
+}
+
+/* Stile für den Titel der Benutzerliste */
+#h2UserList {
+    margin: 5px;
+    color: rgb(215, 207, 207);
 }
