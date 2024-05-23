@@ -90,6 +90,35 @@ const onClose = async (ws) => {
   }
 }
 
+// Funktion zum Laden der Nachrichten aus der Datenbank
+const loadMessages = async() => {
+  const messageDb = await executeSQL("SELECT * FROM messages;");
+  const userIDs = messageDb.map(entry => entry.user_id);
+
+  // Funktion zum Abrufen des Benutzernamens basierend auf der Benutzer-ID
+  const getUsersWithID = async(userID) => {
+    const user = await executeSQL(`SELECT name FROM users WHERE id = ${userID}`);
+    return { name: user[0].name };
+  }
+
+  const userDb = await Promise.all(userIDs.map(getUsersWithID));
+
+  // Funktion zum Kombinieren von Nachrichten und Benutzern
+  const combinate = (firstArray, secondArray) => {
+    const combinedArray = [];
+
+    for (let i = 0; i < firstArray.length; i++) {
+      const combinateEntry = { name: firstArray[i].name, message: secondArray[i].message, timestamp: secondArray[i].timestamp };
+      combinedArray.push(combinateEntry);
+    }
+    
+    return combinedArray;
+  };
+
+  const fullMesageDatas2 = combinate(userDb, messageDb)
+  return(fullMesageDatas2);
+}
+
 const onDisconnect = (ws) => {
   const index = clients.findIndex((client) => client.ws === ws);
   clients.splice(index, 1);
