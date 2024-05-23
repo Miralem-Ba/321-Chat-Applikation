@@ -6,8 +6,8 @@ body {
 
 /* Stile für das Chatfenster */
 #chatwindow {
-    width: 800px;
-    height: 400px;
+    width: 750px;
+    height: 500px;
     max-height: 600px;
     overflow-y: scroll;
 }
