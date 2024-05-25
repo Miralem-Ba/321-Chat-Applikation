@@ -14,9 +14,9 @@ const {
 const app = express();
 const server = http.createServer(app);
 
+app.use(express.json());
+
 // create a livereload server
-// ONLY FOR DEVELOPMENT important to remove in production
-// by set the NODE_ENV to production
 const env = process.env.NODE_ENV || "development";
 if (env !== "production") {
   const liveReloadServer = livereload.createServer();
@@ -25,6 +25,7 @@ if (env !== "production") {
       liveReloadServer.refresh("/");
     }, 100);
   });
+
   // use livereload middleware
   app.use(connectLiveReload());
 }
@@ -35,6 +36,7 @@ app.use(express.static("client"));
 app.get("/", (req, res) => {
   res.sendFile(__dirname + "/client/index.html");
 });
+
 // Initialize the websocket server
 initializeWebsocketServer(server);
 // Initialize the REST api
@@ -45,11 +47,15 @@ initializeAPI(app);
   // Initialize the database
   initializeMariaDB();
   await initializeDBSchema();
+  // TODO: REMOVE!!!! test the database connection
+  const result = await executeSQL("SELECT * FROM users;");
+  console.log(result);
+
   //start the web server
   const serverPort = process.env.PORT || 3000;
   server.listen(serverPort, () => {
     console.log(
-      `Express Server started on port ${serverPort} as '${env}' Environment`
+`Express Server started on port ${serverPort} as '${env}' Environment`
     );
   });
 })();
