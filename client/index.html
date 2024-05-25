@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,59 +8,39 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="/style.css" />
     <script src="/script.js"></script>
-  </head>
+</head>
 
-  <body>
-    <div class="w-screen h-screen bg-green-500 justify-center flex items-center flex flex-col">
-      <h1 class="text-white text-4xl my-3 font-bold "> Ultimativer Mega Chat </h1>
+<body>
+    <div class="w-screen h-screen bg-white justify-center flex items-center flex flex-col">
+        <h1 class="text-black text-4xl my-3 font-bold">Ultimativer Mega Chat</h1>
 
-      <div class="flex flex-row ">
-        <div id="userList" class="w-2/12h-80 bg-gradient-to-r bg-green-950 rounded-lg  rounded-lg outline mr-1">
-            <h2 class="text-xl font-bold mb-2" id="h2UserList">Benutzerliste</h2>
-            <div id="users">
-                <div class="user-item rounded-lg">
-                    <span class="text-lg font-bold">KI</span>
+        <div class="flex flex-row">
+            <div id="userList" class="w-2/12 h-80 bg-gray-200 rounded-lg mr-1 p-2">
+                <h2 class="text-xl font-bold mb-2" id="h2UserList">Benutzerliste</h2>
+                <div id="users" class="overflow-y-auto max-h-64">
+                    <div class="user-item rounded-full bg-gray-300 p-2 mb-1">
+                        <span class="text-lg font-bold">KI</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="chatwindow" class="w-10/12 h-80 bg-gray-200 rounded-lg p-2 overflow-y-auto">
+                <div id="chatbox" class="w-full bg-indigo-100 rounded-lg p-2 mb-2">
+                    <span class="text-xl font-bold">Miralem</span>
+                    <div class="border-t border-gray-500 my-1"></div>
+                    <p class="">Hallo Welt</p>
+                    <div class="border-t border-gray-500 my-1"></div>
+                    <span class="text-xs text-left underline-offset-1">18.06.2024, 10:20:40</span>
                 </div>
             </div>
         </div>
 
-        <div id="chatwindow" class="w-full h-80 bg-gradient-to-r bg-green-950 rounded-lg">
-            
-          <div id="chatbox" class="w-5/12 h-fit bg-indigo-100 rounded-lg">
-              <span class="text-xl font-bold">KI</span> 
-              <div class="border-t border-gray-500 my-1"></div> 
-              <p class="">Ich bin dein digitaler Assistent, basierend auf künstlicher Intelligenz.</p>
-              <div class="border-t border-gray-500 my-1"></div> 
-              <span class="text-xs text-left underline-offset-1">18.06.2024, 10:20:40</span>
-          </div>
-
-          <div id="chatbox" class="w-5/12 h-fit bg-indigo-100 rounded-lg ">
-                    <span class="text-xl font-bold">KI</span> 
-                    <div class="border-t border-gray-500 my-1"></div> 
-                    <p class="">
-                      Ich habe einen neuen Chat gestartet.
-                      Kommuniziere mit anderen Teilnehmern. Deine Nachrichten werden durch einen hellen Rand hervorgehoben.
-                      Unterhalb des Chatfensters kannst du deine Nachricht eingeben oder deinen Benutzernamen auswählen.
-                    </p>
-                    <div class="border-t border-gray-500 my-1"></div> 
-                    <span class="text-xs text-left underline-offset-1">18.06.2024, 10:25:55</span>
-                </div>
-            </div>
+        <div id="inputWindow" class="w-full flex flex-row justify-between items-center mt-2">
+            <input type="text" id="user-input" placeholder="Dein Benutzername..." class="w-1/2 p-2 border border-gray-300 rounded mx-2" />
+            <button class="bg-gray-800 text-white px-4 py-2 rounded" id="selectUser">Speichern</button>
+            <input type="text" id="message-input" placeholder="Deine Nachricht..." class="w-1/2 p-2 border border-gray-300 rounded mx-2" />
+            <button class="bg-gray-800 text-white px-4 py-2 rounded" id="sendButton">Senden</button>
         </div>
-
-        <div id="inputWindow" class="w-full rounded-lg mt-1.5">
-          <div class="flex flex-row" id="">
-              <input type="text" id="message-input" placeholder="Deine Nachricht..." class="w-full p-2 border border-gray-100 rounded" />
-              <button class="bg-green-950 text-white px-4 py-2 rounded ml-2 w-auto" id="sendButton">Senden</button>
-          </div>
-      </div>
-
-      <div id="inputWindow" class="w-5/12 rounded-lg mt-1.5">
-          <div class="flex flex-row" id="">
-              <input type="text" id="user-input" placeholder="Dein Benutzername..." class=" p-2 border border-gray-300 rounded" />
-              <button class="bg-green-950 text-white px-4 py-2 rounded ml-2 w-auto" id="selectUser">Benutzer Speichern</button>
-          </div>
-      </div>
-  </div>
+    </div>
 </body>
 </html>
