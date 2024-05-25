@@ -47,7 +47,7 @@ initializeAPI(app);
   // Initialize the database
   initializeMariaDB();
   await initializeDBSchema();
-  // TODO: REMOVE!!!! test the database connection
+  // TODO: REMOVE test the database connection
   const result = await executeSQL("SELECT * FROM users;");
   console.log(result);
 
