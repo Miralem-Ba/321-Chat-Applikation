@@ -91,8 +91,13 @@ const onClose = async (ws) => {
 }
 
 // Funktion zum Laden der Nachrichten aus der Datenbank
-const loadMessages = async() => {
+const loadMessages = async () => {
   const messageDb = await executeSQL("SELECT * FROM messages;");
+  
+  if (!messageDb) {
+    throw new Error("Failed to load messages from the database.");
+  }
+  
   const userIDs = messageDb.map(entry => entry.user_id);
 
   // Funktion zum Abrufen des Benutzernamens basierend auf der Benutzer-ID
@@ -106,7 +111,6 @@ const loadMessages = async() => {
   // Funktion zum Kombinieren von Nachrichten und Benutzern
   const combinate = (firstArray, secondArray) => {
     const combinedArray = [];
-
     for (let i = 0; i < firstArray.length; i++) {
       const combinateEntry = { name: firstArray[i].name, message: secondArray[i].message, timestamp: secondArray[i].timestamp };
       combinedArray.push(combinateEntry);
