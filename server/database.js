@@ -14,6 +14,7 @@ const initializeMariaDB = () => {
     user: process.env.DB_USER || "mychat",
     password: process.env.DB_PASSWORD || "mychatpassword",
     connectionLimit: 5,
+    allowPublicKeyRetrieval: true,
   });
 };
 
