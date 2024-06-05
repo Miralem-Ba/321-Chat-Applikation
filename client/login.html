@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - My Chat Program</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/login.js"></script>
+</head>
+<body class="w-screen h-screen bg-white flex flex-col">
+    <nav class="bg-gray-200 text-black">
+        <div class="max-w-6xl mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <a href="login.html" class="flex items-center py-5 px-2 hover:text-gray-300">
+                    <img src="/image/icon.jpg" alt="Logo" class="h-10 w-10 mr-2">
+                    <span class="font-bold">My Chat Program</span>
+                </a>
+                <div class="flex items-center space-x-4">
+                    <a href="login.html" class="py-2 px-3 hover:bg-stone-500 hover:text-white rounded-md">Login</a>
+                    <a href="register.html" class="py-2 px-3 hover:bg-stone-500 hover:text-white rounded-md">Registrieren</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+    <div class="flex-grow flex justify-center items-center">
+        <div class="w-1/3 bg-gray-200 rounded-lg p-8 shadow-lg">
+            <h1 class="text-black text-4xl mb-6 font-bold text-center">Login</h1>
+            <form>
+                <div class="mb-4">
+                    <label for="username" class="block text-black text-lg font-bold mb-2">Username</label>
+                    <input type="text" id="username" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter your username" />
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-black text-lg font-bold mb-2">Password</label>
+                    <input type="password" id="password" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter your password" />
+                </div>
+                <div class="flex justify-between items-center">
+                    <button type="submit" class="bg-gray-800 text-white px-4 py-2 rounded">Login</button>
+                    <a href="register.html" class="text-gray-800 underline">Register</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
