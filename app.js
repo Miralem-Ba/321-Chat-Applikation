@@ -34,7 +34,7 @@ if (env !== "production") {
 app.use(express.static("client"));
 // route for the homepage
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/client/index.html");
+  res.sendFile(__dirname + "/client/login.html");
 });
 
 // Initialize the websocket server
