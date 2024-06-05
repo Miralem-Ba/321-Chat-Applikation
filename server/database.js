@@ -39,16 +39,14 @@ const executeSQL = async (query) => {
 
 // Funktion zur Initialisierung des Datenbankschemas
 const initializeDBSchema = async () => {
-  // SQL-Abfrage zum Erstellen der "users"-Tabelle, falls sie noch nicht existiert
   const userTableQuery = `CREATE TABLE IF NOT EXISTS users (
     id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     PRIMARY KEY (id)
   );`;
- // Ausführen der SQL-Abfrage zum Erstellen der "users"-Tabelle
   await executeSQL(userTableQuery);
 
-  // SQL-Abfrage zum Erstellen der "messages"-Tabelle, falls sie noch nicht existiert
   const messageTableQuery = `CREATE TABLE IF NOT EXISTS messages (
     id INT NOT NULL AUTO_INCREMENT,
     user_id INT NOT NULL,
@@ -57,7 +55,6 @@ const initializeDBSchema = async () => {
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );`;
-  // Ausführen der SQL-Abfrage zum Erstellen der "messages"-Tabelle
   await executeSQL(messageTableQuery);
 };
 

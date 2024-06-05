@@ -1,6 +1,7 @@
-// Importieren des WebSocket-Moduls und der executeSQL-Funktion aus der Datenbank-Datei
 const WebSocket = require("ws");
 const { executeSQL } = require("./database");
+const jwt = require('jsonwebtoken');
+const secretKey = 'your_secret_key';  // Setze hier deinen geheimen Schlüssel
 
 // Initialisierung des WebSocket-Servers
 const initializeWebsocketServer = (server) => {
@@ -14,159 +15,111 @@ let websockets = [];
 // Funktion, die aufgerufen wird, wenn eine neue WebSocket-Verbindung hergestellt wird
 const onConnection = (ws) => {
   console.log("Neue WebSocket-Verbindung");
-  // Event-Listener für eingehende Nachrichten
   ws.on("message", (message) => onMessage(ws, message));
-  // Event-Listener für das Schließen der Verbindung
-  ws.on("close", () => onClose(ws))
+  ws.on("close", () => onClose(ws));
 };
 
 // Funktion, die aufgerufen wird, wenn eine Nachricht empfangen wird
 const onMessage = async (ws, message) => {
-  const getMessagEntry = JSON.parse(message);
-  if (getMessagEntry[0].type === "sendChatData") {
-    const newMessageEntry = JSON.parse(getMessagEntry[0].message);
-    const messageOutput = newMessageEntry.message;
-    const usernameOutput = newMessageEntry.username;
-    const timeStampOutput = newMessageEntry.timeStamp;
-    await receiveChat(messageOutput, usernameOutput, timeStampOutput);
-  }
-  else if (getMessagEntry[0].type === "sendUserData") {
-    const newMessageEntry = JSON.parse(getMessagEntry[0].message);
-    const usernameOutput = newMessageEntry.username;
+  const messageData = JSON.parse(message);
 
-    for (let i = 0; i < websockets.length; i++) {
-      if (ws === websockets[i].websocket) {
-        websockets[i].username = usernameOutput;
-      }
-      console.log(websockets[i].username)
+  if (messageData.type === "register") {
+    const { username, password } = messageData;
+    await registerUser(username, password);
+    ws.send(JSON.stringify({ type: "register_success" }));
+  } else if (messageData.type === "login") {
+    const { username, password } = messageData;
+    try {
+      const { token } = await authenticateUser(username, password);
+      ws.send(JSON.stringify({ type: "login_success", token }));
+    } catch (error) {
+      ws.send(JSON.stringify({ type: "login_failure", message: error.message }));
     }
-    await receiveUser(usernameOutput);
-  }
-
-  else if (getMessagEntry === "Hello, server!") {
-    const clientData = {
-      websocket: ws,
-      username: ""
+  } else if (messageData.type === "message") {
+    const { token, text, timestamp } = messageData;
+    try {
+      const decoded = jwt.verify(token, secretKey);
+      const userId = decoded.id;
+      await receiveChat(text, userId, timestamp);
+    } catch (error) {
+      ws.send(JSON.stringify({ type: "auth_error", message: "Invalid token" }));
     }
-
-    websockets.push(clientData);
-    console.log(websockets.length)
   }
-  
-  // Laden der aktuellen Nachrichten aus der Datenbank
+
   const messageDatas = await loadMessages();
-  const wsMessage = JSON.stringify([
-    {
-      type: "messagesData",
-      message: JSON.stringify(messageDatas),
-      users: websockets
-    },
-  ]);
-  
-  // Senden der Nachrichten und Benutzerliste an alle verbundenen Clients
-  for (let i = 0; i < websockets.length; i++) {
-    websockets[i].websocket.send(wsMessage)
+  const wsMessage = JSON.stringify({
+    type: "messagesData",
+    message: messageDatas
+  });
+
+  websockets.forEach((client) => {
+    client.send(wsMessage);
+  });
+};
+
+// Funktion zur Benutzerregistrierung
+const registerUser = async (username, password) => {
+  const query = `INSERT INTO users (name, password) VALUES ("${username}", "${password}")`;
+  await executeSQL(query);
+};
+
+// Funktion zur Benutzerauthentifizierung
+const authenticateUser = async (username, password) => {
+  const query = `SELECT id FROM users WHERE name = "${username}" AND password = "${password}"`;
+  const result = await executeSQL(query);
+  if (result.length > 0) {
+    const token = jwt.sign({ id: result[0].id }, secretKey, { expiresIn: '1h' });
+    return { token };
+  } else {
+    throw new Error("Authentication failed");
   }
 };
 
 // Funktion, die aufgerufen wird, wenn eine WebSocket-Verbindung geschlossen wird
 const onClose = async (ws) => {
-  // Entfernen der geschlossenen Verbindung aus dem Array
-  websockets = websockets.filter((entry) => entry.websocket !== ws);
-
-  // Laden der aktuellen Nachrichten aus der Datenbank
+  websockets = websockets.filter((client) => client !== ws);
   const messageDatas = await loadMessages();
-  const wsMessage = JSON.stringify([
-    {
-      type: "messagesData",
-      message: JSON.stringify(messageDatas),
-      users: websockets
-    },
-  ]);
-  
-  // Senden der Nachrichten und Benutzerliste an alle verbundenen Clients
-  for (let i = 0; i < websockets.length; i++) {
-    websockets[i].websocket.send(wsMessage)
-  }
-}
+  const wsMessage = JSON.stringify({
+    type: "messagesData",
+    message: messageDatas
+  });
+
+  websockets.forEach((client) => {
+    client.send(wsMessage);
+  });
+};
 
 // Funktion zum Laden der Nachrichten aus der Datenbank
 const loadMessages = async () => {
   const messageDb = await executeSQL("SELECT * FROM messages;");
-  
   if (!messageDb) {
     throw new Error("Failed to load messages from the database.");
   }
-  
   const userIDs = messageDb.map(entry => entry.user_id);
 
-  // Funktion zum Abrufen des Benutzernamens basierend auf der Benutzer-ID
-  const getUsersWithID = async(userID) => {
+  const getUsersWithID = async (userID) => {
     const user = await executeSQL(`SELECT name FROM users WHERE id = ${userID}`);
     return { name: user[0].name };
   }
 
   const userDb = await Promise.all(userIDs.map(getUsersWithID));
 
-  // Funktion zum Kombinieren von Nachrichten und Benutzern
   const combinate = (firstArray, secondArray) => {
     const combinedArray = [];
     for (let i = 0; i < firstArray.length; i++) {
       const combinateEntry = { name: firstArray[i].name, message: secondArray[i].message, timestamp: secondArray[i].timestamp };
       combinedArray.push(combinateEntry);
     }
-
     return combinedArray;
   };
 
-  const fullMesageDatas2 = combinate(userDb, messageDb)
-  return(fullMesageDatas2);
-}
+  const fullMessageDatas = combinate(userDb, messageDb);
+  return fullMessageDatas;
+};
 
 // Funktion zum Verarbeiten und Speichern empfangener Chat-Nachrichten in der Datenbank
-const receiveChat = async (messageInput, usernameInput, timeStampInput) => {
-  const message = messageInput
-  const username = usernameInput
-  const timeStamp = timeStampInput
-  const userIdResult = await executeSQL(`SELECT id FROM users WHERE name = '${username}'`);
-
-  if (userIdResult && userIdResult.length > 0) {
-    userId = userIdResult[0].id;
-  } else {
-    userId = 17; // Standardbenutzer-ID, falls Benutzer nicht gefunden wird
-  }
-
-  // Bedingte Nachrichtenverarbeitung und Speichern in der Datenbank
-  if (message === "smile") {
-    const newMessage = "(＾◡＾)"
-    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${newMessage}", "${timeStamp}")`;
-    await executeSQL(query);
-  }
-
-  else if (message === "wizard") {
-    const newMessage = "(∩^o^)⊃━☆"
-    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${newMessage}", "${timeStamp}")`;
-    await executeSQL(query);
-  }
-
-  else if (message === "") {
-    const newMessage = "--This user was too stupid for a message--\n--LG KIM--"
-    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${newMessage}", "${timeStamp}")`;
-    await executeSQL(query);
-    const query2 = `INSERT INTO messages (user_id, message, timestamp) VALUES (21, "Hahahahahahahahahaha", "${timeStamp}")`;
-    await executeSQL(query2);
-  }
-
-  else {
-    const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${message}", "${timeStamp}")`;
-    await executeSQL(query);
-  }
-}
-
-// Funktion zum Verarbeiten und Speichern empfangener Benutzerdaten in der Datenbank
-const receiveUser = async (usernameInput) => {
-  const username = usernameInput
-  const query = `INSERT INTO users (name) VALUES ("${username}")`;
+const receiveChat = async (messageInput, userId, timeStampInput) => {
+  const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${messageInput}", "${timeStampInput}")`;
   await executeSQL(query);
 }
 
