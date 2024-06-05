@@ -1,6 +1,6 @@
 services:
   mariadb:
-    image: mariadb:11.1.2
+    image: mariadb:latest
     command: "--default-authentication-plugin=mysql_native_password"
     volumes:
       - m321_project_mariadb:/var/lib/mysql
