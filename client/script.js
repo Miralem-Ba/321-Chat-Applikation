@@ -36,17 +36,20 @@ socket.addEventListener("message", (event) => {
             chatBox.innerHTML += chatBoxElement;
         });
 
+        chatBox.scrollTop = chatBox.scrollHeight;
+    } else if (data.type === "userList") {
+        const users = data.users;
         const userBox = document.getElementById('users');
         userBox.innerHTML = ''; // Clear user list
-        data.users.forEach(user => {
-            const userElement = 
-            `<div class="user-item bg-gray-300 p-2 mb-1">
-                <span class="text-lg font-bold">${user.username}</span>
-            </div>`;
-            userBox.innerHTML += userElement;
+        users.forEach(user => {
+            if (user.username) {
+                const userElement = 
+                `<div class="user-item bg-gray-300 p-2 mb-1">
+                    <span class="text-lg font-bold">${user.username}</span>
+                </div>`;
+                userBox.innerHTML += userElement;
+            }
         });
-
-        chatBox.scrollTop = chatBox.scrollHeight;
     }
 });
 
@@ -61,6 +64,7 @@ const newChatBox = async () => {
 
     const message = msgInput.value;
     const token = localStorage.getItem('token');
+    const username = localStorage.getItem('username');
 
     const timeStamp = new Date().toLocaleDateString("de-CH", {
         hour: "numeric",
@@ -72,7 +76,8 @@ const newChatBox = async () => {
         type: "message",
         text: message,
         timestamp: timeStamp,
-        token: token
+        token: token,
+        username: username
     };
 
     socket.send(JSON.stringify(chatData));
@@ -81,11 +86,50 @@ const newChatBox = async () => {
     sendButton.disabled = false;
 };
 
+// Funktion zum Einloggen
+const loginUser = async (username, password) => {
+    const loginData = {
+        type: "login",
+        username: username,
+        password: password
+    };
+
+    socket.send(JSON.stringify(loginData));
+};
+
+// Funktion zum Abmelden
+const logoutUser = async () => {
+    const logoutData = {
+        type: "logout"
+    };
+
+    socket.send(JSON.stringify(logoutData));
+    localStorage.removeItem('token');
+    localStorage.removeItem('username');
+};
+
 // Event-Listener für das Laden des Dokuments
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Document loaded");
 
     document.getElementById('sendButton').addEventListener('click', function () {
         newChatBox();
+    });
+
+    // Login-Formular
+    const loginForm = document.getElementById('loginForm');
+    if (loginForm) {
+        loginForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            localStorage.setItem('username', username);
+            loginUser(username, password);
+        });
+    }
+
+    // Event-Listener für das Schließen des Fensters/Tabs
+    window.addEventListener("beforeunload", (event) => {
+        logoutUser();
     });
 });
