@@ -15,8 +15,13 @@ let websockets = [];
 // Funktion, die aufgerufen wird, wenn eine neue WebSocket-Verbindung hergestellt wird
 const onConnection = (ws) => {
   console.log("Neue WebSocket-Verbindung");
+  websockets.push(ws);
+
   ws.on("message", (message) => onMessage(ws, message));
   ws.on("close", () => onClose(ws));
+
+  // Sende die aktuellen Nachrichten an den neuen Client
+  sendAllMessages(ws);
 };
 
 // Funktion, die aufgerufen wird, wenn eine Nachricht empfangen wird
@@ -32,6 +37,7 @@ const onMessage = async (ws, message) => {
     try {
       const { token } = await authenticateUser(username, password);
       ws.send(JSON.stringify({ type: "login_success", token }));
+      sendAllMessages(ws);
     } catch (error) {
       ws.send(JSON.stringify({ type: "login_failure", message: error.message }));
     }
@@ -41,20 +47,11 @@ const onMessage = async (ws, message) => {
       const decoded = jwt.verify(token, secretKey);
       const userId = decoded.id;
       await receiveChat(text, userId, timestamp);
+      sendAllMessages();
     } catch (error) {
       ws.send(JSON.stringify({ type: "auth_error", message: "Invalid token" }));
     }
   }
-
-  const messageDatas = await loadMessages();
-  const wsMessage = JSON.stringify({
-    type: "messagesData",
-    message: messageDatas
-  });
-
-  websockets.forEach((client) => {
-    client.send(wsMessage);
-  });
 };
 
 // Funktion zur Benutzerregistrierung
@@ -78,15 +75,6 @@ const authenticateUser = async (username, password) => {
 // Funktion, die aufgerufen wird, wenn eine WebSocket-Verbindung geschlossen wird
 const onClose = async (ws) => {
   websockets = websockets.filter((client) => client !== ws);
-  const messageDatas = await loadMessages();
-  const wsMessage = JSON.stringify({
-    type: "messagesData",
-    message: messageDatas
-  });
-
-  websockets.forEach((client) => {
-    client.send(wsMessage);
-  });
 };
 
 // Funktion zum Laden der Nachrichten aus der Datenbank
@@ -104,16 +92,16 @@ const loadMessages = async () => {
 
   const userDb = await Promise.all(userIDs.map(getUsersWithID));
 
-  const combinate = (firstArray, secondArray) => {
+  const combine = (firstArray, secondArray) => {
     const combinedArray = [];
     for (let i = 0; i < firstArray.length; i++) {
-      const combinateEntry = { name: firstArray[i].name, message: secondArray[i].message, timestamp: secondArray[i].timestamp };
-      combinedArray.push(combinateEntry);
+      const combineEntry = { name: firstArray[i].name, message: secondArray[i].message, timestamp: secondArray[i].timestamp };
+      combinedArray.push(combineEntry);
     }
     return combinedArray;
   };
 
-  const fullMessageDatas = combinate(userDb, messageDb);
+  const fullMessageDatas = combine(userDb, messageDb);
   return fullMessageDatas;
 };
 
@@ -121,6 +109,24 @@ const loadMessages = async () => {
 const receiveChat = async (messageInput, userId, timeStampInput) => {
   const query = `INSERT INTO messages (user_id, message, timestamp) VALUES (${userId}, "${messageInput}", "${timeStampInput}")`;
   await executeSQL(query);
+}
+
+// Funktion zum Senden aller Nachrichten an alle verbundenen Clients
+const sendAllMessages = async (ws = null) => {
+  const messageDatas = await loadMessages();
+  const wsMessage = JSON.stringify({
+    type: "messagesData",
+    message: JSON.stringify(messageDatas),
+    users: websockets.map(ws => ({ username: ws.username }))
+  });
+
+  if (ws) {
+    ws.send(wsMessage);
+  } else {
+    websockets.forEach((client) => {
+      client.send(wsMessage);
+    });
+  }
 }
 
 // Exportieren der Funktion zur Initialisierung des WebSocket-Servers

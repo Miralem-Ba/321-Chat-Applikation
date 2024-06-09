@@ -20,78 +20,47 @@ socket.addEventListener("error", (event) => {
 // Event-Listener für eingehende Nachrichten vom Server
 socket.addEventListener("message", (event) => {
     const data = JSON.parse(event.data);
-    const messagedatasWsOutput = data[0].message;
-    const messageDatas = JSON.parse(messagedatasWsOutput)
-    const messages = messageDatas
-    const userInput = document.getElementById('user-input');
-    const chatBox = document.getElementById('chatwindow');
-    const userBox = document.getElementById('users')
-    const userdatadatasWsOutput = data[0].users;
-    
-    for (let i = 0; i < messages.length; i++) {
-        const message = messages[i].message;
-        const name = messages[i].name;
-        const timestamp = messages[i].timestamp;
-    
-        const chatBoxElement = 
-        `<div class="w-full bg-indigo-100 rounded-lg p-2 mb-2">
-            <span class="text-xl font-bold">${name}</span> 
-            <div class="border-t border-gray-500 my-1"></div> 
-            <p>${message}</p>
-            <div class="border-t border-gray-500 my-1"></div> 
-            <span class="text-xs text-left underline-offset-1">${timestamp}</span>
-        </div>`;
+    if (data.type === "messagesData") {
+        const messages = JSON.parse(data.message);
+        const chatBox = document.getElementById('chatwindow');
+        chatBox.innerHTML = ''; // Clear chat window
+        messages.forEach(messageData => {
+            const chatBoxElement = 
+            `<div class="w-full bg-indigo-100 rounded-lg p-2 mb-2">
+                <span class="text-xl font-bold">${messageData.name}</span> 
+                <div class="border-t border-gray-500 my-1"></div> 
+                <p>${messageData.message}</p>
+                <div class="border-t border-gray-500 my-1"></div> 
+                <span class="text-xs text-left underline-offset-1">${messageData.timestamp}</span>
+            </div>`;
+            chatBox.innerHTML += chatBoxElement;
+        });
 
-        chatBox.innerHTML += chatBoxElement;
+        const userBox = document.getElementById('users');
+        userBox.innerHTML = ''; // Clear user list
+        data.users.forEach(user => {
+            const userElement = 
+            `<div class="user-item bg-gray-300 p-2 mb-1">
+                <span class="text-lg font-bold">${user.username}</span>
+            </div>`;
+            userBox.innerHTML += userElement;
+        });
+
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
-
-    let usersInput = '';
-    for (let i = 0; i < userdatadatasWsOutput.length; i++) {
-        const username = userdatadatasWsOutput[i].username;
-
-        const userElement = 
-        `<div class="user-item bg-gray-300 p-2 mb-1">
-            <span class="text-lg font-bold">${username}</span>
-        </div>`;
-
-        usersInput = `${usersInput}${userElement}`;
-        userBox.innerHTML = usersInput;
-    }
-    
-    chatBox.scrollTop = chatBox.scrollHeight;
 });
-
-// Funktion zum Auswählen eines Benutzers und Senden der Benutzerdaten über WebSocket
-const selectUser = async () => {
-    const userInput = document.getElementById('user-input');
-    const username = userInput.value;
-
-    const userData = {
-        username: username
-    };
-
-    const wsUser = JSON.stringify([
-        {
-            type: "sendUserData",
-            message: JSON.stringify(userData)
-        }
-    ]);
-
-    socket.send(wsUser);
-};
 
 // Funktion zum Erstellen einer neuen Chat-Nachricht und Senden dieser Nachricht über WebSocket
 const newChatBox = async () => {
     const chatBox = document.getElementById('chatwindow');
     const msgInput = document.getElementById('message-input');
-    const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('sendButton');
 
     // Button deaktivieren
     sendButton.disabled = true;
 
-    const username = userInput.value;
     const message = msgInput.value;
+    const token = localStorage.getItem('token');
 
     const timeStamp = new Date().toLocaleDateString("de-CH", {
         hour: "numeric",
@@ -100,31 +69,13 @@ const newChatBox = async () => {
     });
 
     const chatData = {
-        username: username,
-        message: message,
-        timeStamp: timeStamp 
+        type: "message",
+        text: message,
+        timestamp: timeStamp,
+        token: token
     };
 
-    const chatBoxElement = 
-        `<div class="w-full bg-indigo-100 rounded-lg p-2 mb-2">
-            <span class="text-xl font-bold">${username}</span> 
-            <div class="border-t border-gray-500 my-1"></div> 
-            <p>${message}</p>
-            <div class="border-t border-gray-500 my-1"></div> 
-            <span class="text-xs text-left underline-offset-1">${timeStamp}</span>
-        </div>`;
-
-    chatBox.innerHTML += chatBoxElement;
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    const wsMessage = JSON.stringify([
-        {
-            type: "sendChatData",
-            message: JSON.stringify(chatData)
-        }
-    ]);
-
-    socket.send(wsMessage);
+    socket.send(JSON.stringify(chatData));
 
     // Button nach dem Senden wieder aktivieren
     sendButton.disabled = false;
@@ -136,9 +87,5 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById('sendButton').addEventListener('click', function () {
         newChatBox();
-    });
-
-    document.getElementById('selectUser').addEventListener('click', function () {
-        selectUser();
     });
 });
