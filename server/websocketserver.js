@@ -15,13 +15,14 @@ let websockets = [];
 // Funktion, die aufgerufen wird, wenn eine neue WebSocket-Verbindung hergestellt wird
 const onConnection = (ws) => {
   console.log("Neue WebSocket-Verbindung");
-  websockets.push(ws);
+  websockets.push({ ws, username: null });
 
   ws.on("message", (message) => onMessage(ws, message));
   ws.on("close", () => onClose(ws));
 
   // Sende die aktuellen Nachrichten an den neuen Client
   sendAllMessages(ws);
+  sendUserList();  // Benutzerliste an den neuen Client senden
 };
 
 // Funktion, die aufgerufen wird, wenn eine Nachricht empfangen wird
@@ -32,11 +33,19 @@ const onMessage = async (ws, message) => {
     const { username, password } = messageData;
     await registerUser(username, password);
     ws.send(JSON.stringify({ type: "register_success" }));
+    sendUserList();  // Benutzerliste nach der Registrierung aktualisieren
   } else if (messageData.type === "login") {
     const { username, password } = messageData;
     try {
       const { token } = await authenticateUser(username, password);
       ws.send(JSON.stringify({ type: "login_success", token }));
+      // Verknüpfe den WebSocket mit dem Benutzernamen
+      const client = websockets.find(client => client.ws === ws);
+      if (client) {
+        client.username = username;
+      }
+      // Sende aktualisierte Benutzerliste an alle Clients
+      sendUserList();
       sendAllMessages(ws);
     } catch (error) {
       ws.send(JSON.stringify({ type: "login_failure", message: error.message }));
@@ -50,6 +59,12 @@ const onMessage = async (ws, message) => {
       sendAllMessages();
     } catch (error) {
       ws.send(JSON.stringify({ type: "auth_error", message: "Invalid token" }));
+    }
+  } else if (messageData.type === "logout") {
+    const clientIndex = websockets.findIndex(client => client.ws === ws);
+    if (clientIndex !== -1) {
+      websockets.splice(clientIndex, 1);
+      sendUserList();
     }
   }
 };
@@ -74,7 +89,8 @@ const authenticateUser = async (username, password) => {
 
 // Funktion, die aufgerufen wird, wenn eine WebSocket-Verbindung geschlossen wird
 const onClose = async (ws) => {
-  websockets = websockets.filter((client) => client !== ws);
+  websockets = websockets.filter(client => client.ws !== ws);
+  sendUserList();
 };
 
 // Funktion zum Laden der Nachrichten aus der Datenbank
@@ -117,16 +133,35 @@ const sendAllMessages = async (ws = null) => {
   const wsMessage = JSON.stringify({
     type: "messagesData",
     message: JSON.stringify(messageDatas),
-    users: websockets.map(ws => ({ username: ws.username }))
+    users: websockets.map(client => ({ username: client.username }))
   });
 
   if (ws) {
     ws.send(wsMessage);
   } else {
     websockets.forEach((client) => {
-      client.send(wsMessage);
+      client.ws.send(wsMessage);
     });
   }
+}
+
+// Funktion zum Senden der aktuellen Benutzerliste an alle verbundenen Clients
+const sendUserList = async () => {
+  const userList = await loadUsers();
+  const wsMessage = JSON.stringify({
+    type: "userList",
+    users: userList
+  });
+
+  websockets.forEach(client => {
+    client.ws.send(wsMessage);
+  });
+}
+
+// Funktion zum Laden aller Benutzer aus der Datenbank
+const loadUsers = async () => {
+  const userDb = await executeSQL("SELECT name FROM users;");
+  return userDb.map(user => ({ username: user.name }));
 }
 
 // Exportieren der Funktion zur Initialisierung des WebSocket-Servers
