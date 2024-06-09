@@ -84,6 +84,9 @@ const newChatBox = async () => {
 
     // Button nach dem Senden wieder aktivieren
     sendButton.disabled = false;
+
+        // Textfeld leeren
+        msgInput.value = '';
 };
 
 // Funktion zum Einloggen
