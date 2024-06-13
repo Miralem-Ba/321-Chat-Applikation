@@ -50,6 +50,17 @@ socket.addEventListener("message", (event) => {
                 userBox.innerHTML += userElement;
             }
         });
+    } else if (data.type === "login_success") {
+        sessionStorage.setItem('token', data.token);
+        alert('Login erfolgreich!');
+        window.location.href = 'index.html';
+    } else if (data.type === "login_failure") {
+        alert('Login fehlgeschlagen: ' + data.message);
+    } else if (data.type === "register_success") {
+        alert('Registrierung erfolgreich!');
+        window.location.href = 'login.html';
+    } else if (data.type === "auth_error") {
+        alert('Authentifizierungsfehler: ' + data.message);
     }
 });
 
