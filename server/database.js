@@ -3,7 +3,6 @@ let pool = null;
 
 // Funktion zur Initialisierung der MariaDB-Verbindung
 const initializeMariaDB = () => {
-
   // Importieren des mariadb-Moduls
   const mariadb = require("mariadb");
 
@@ -56,6 +55,15 @@ const initializeDBSchema = async () => {
     FOREIGN KEY (user_id) REFERENCES users(id)
   );`;
   await executeSQL(messageTableQuery);
+
+  const tokenTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
+    id INT NOT NULL AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );`;
+  await executeSQL(tokenTableQuery);
 };
 
 // Exportieren der Funktionen zur Nutzung in anderen Modulen
