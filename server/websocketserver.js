@@ -37,12 +37,13 @@ const onMessage = async (ws, message) => {
   } else if (messageData.type === "login") {
     const { username, password } = messageData;
     try {
-      const { token } = await authenticateUser(username, password);
-      ws.send(JSON.stringify({ type: "login_success", token }));
-      // Verknüpfe den WebSocket mit dem Benutzernamen
+      const { token, userId } = await authenticateUser(username, password);
+      ws.send(JSON.stringify({ type: "login_success", token, username }));
+      // Verknüpfe den WebSocket mit dem Benutzernamen und der Benutzer-ID
       const client = websockets.find(client => client.ws === ws);
       if (client) {
         client.username = username;
+        client.userId = userId;
       }
       // Sende aktualisierte Benutzerliste an alle Clients
       sendUserList();
@@ -82,7 +83,7 @@ const authenticateUser = async (username, password) => {
   if (result.length > 0) {
     const token = jwt.sign({ id: result[0].id }, secretKey, { expiresIn: '1h' });
     await executeSQL(`INSERT INTO tokens (user_id, token) VALUES (${result[0].id}, "${token}")`);
-    return { token };
+    return { token, userId: result[0].id };
   } else {
     throw new Error("Authentication failed");
   }
