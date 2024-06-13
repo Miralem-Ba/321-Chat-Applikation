@@ -81,6 +81,7 @@ const authenticateUser = async (username, password) => {
   const result = await executeSQL(query);
   if (result.length > 0) {
     const token = jwt.sign({ id: result[0].id }, secretKey, { expiresIn: '1h' });
+    await executeSQL(`INSERT INTO tokens (user_id, token) VALUES (${result[0].id}, "${token}")`);
     return { token };
   } else {
     throw new Error("Authentication failed");
