@@ -51,20 +51,22 @@ socket.addEventListener("message", (event) => {
             }
         });
     } else if (data.type === "login_success") {
-        sessionStorage.setItem('token', data.token);
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('username', data.username);
         alert('Login erfolgreich!');
         window.location.href = 'index.html';
     } else if (data.type === "login_failure") {
         alert('Login fehlgeschlagen: ' + data.message);
     } else if (data.type === "register_success") {
-        alert('Registrierung erfolgreich!');
+        alert('Registrierung erfolgreich! Sie können sich jetzt einloggen.');
         window.location.href = 'login.html';
     } else if (data.type === "auth_error") {
         alert('Authentifizierungsfehler: ' + data.message);
+        window.location.href = 'login.html';
     }
 });
 
-// Funktion zum Erstellen einer neuen Chat-Nachricht und Senden dieser Nachricht über WebSocket
+// Funktion zum Senden einer neuen Chat-Nachricht
 const newChatBox = async () => {
     const chatBox = document.getElementById('chatwindow');
     const msgInput = document.getElementById('message-input');
@@ -96,8 +98,8 @@ const newChatBox = async () => {
     // Button nach dem Senden wieder aktivieren
     sendButton.disabled = false;
 
-        // Textfeld leeren
-        msgInput.value = '';
+    // Textfeld leeren
+    msgInput.value = '';
 };
 
 // Funktion zum Einloggen
