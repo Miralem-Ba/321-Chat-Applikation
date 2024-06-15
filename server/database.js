@@ -51,11 +51,19 @@ const initializeDBSchema = async () => {
     user_id INT NOT NULL,
     message VARCHAR(255) NOT NULL,
     timestamp VARCHAR(255) NOT NULL,
-    password VARCHAR(255) NOT NULL,
     PRIMARY KEY (id),
     FOREIGN KEY (user_id) REFERENCES users(id)
   );`;
   await executeSQL(messageTableQuery);
+
+  const tokensTableQuery = `CREATE TABLE IF NOT EXISTS tokens (
+    id INT NOT NULL AUTO_INCREMENT,
+    user_id INT NOT NULL,
+    token VARCHAR(255) NOT NULL,
+    PRIMARY KEY (id),
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );`;
+  await executeSQL(tokensTableQuery);
 };
 
 // Exportieren der Funktionen zur Nutzung in anderen Modulen
