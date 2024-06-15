@@ -54,8 +54,6 @@ initializeAPI(app);
   //start the web server
   const serverPort = process.env.PORT || 3000;
   server.listen(serverPort, () => {
-    console.log(
-`Express Server started on port ${serverPort} as '${env}' Environment`
-    );
+    console.log(`Express Server started on port ${serverPort} as '${env}' Environment`);
   });
 })();
