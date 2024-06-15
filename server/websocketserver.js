@@ -83,6 +83,12 @@ const authenticateUser = async (username, password) => {
   if (result.length > 0) {
     const token = jwt.sign({ id: result[0].id }, secretKey, { expiresIn: '1h' });
     await executeSQL(`INSERT INTO tokens (user_id, token) VALUES (${result[0].id}, "${token}")`);
+    
+    // Token nach der Authentifizierung löschen
+    setTimeout(async () => {
+      await executeSQL(`DELETE FROM tokens WHERE token = "${token}"`);
+    }, 1000); // Warte 1 Sekunde, um sicherzustellen, dass der Token zurückgegeben wird
+    
     return { token, userId: result[0].id };
   } else {
     throw new Error("Authentication failed");
